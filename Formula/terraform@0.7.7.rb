@@ -7,6 +7,6 @@ class TerraformAT077 < Formula
   def install
     bin.install "terraform"
     prefix.install_metafiles
-    system "pip", "install", "boto" 
+    system "/usr/local/bin/pip", "install", "boto" 
   end
 end
