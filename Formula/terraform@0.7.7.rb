@@ -11,6 +11,7 @@ class TerraformAT077 < Formula
     prefix.install_metafiles
     venv = virtualenv_create(libexec)
     venv.pip_install "boto"
+    venv.pip_install_and_link buildpath
   end
 
 end
