@@ -1,6 +1,6 @@
 require "language/go"
 
-class Terraform < Formula
+class TerraformAT077 < Formula
   desc "Tool to build, change, and version infrastructure"
   homepage "https://www.terraform.io/"
   url "https://github.com/hashicorp/terraform/archive/0.7.7.tar.gz"
