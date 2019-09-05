@@ -9,101 +9,66 @@ class TerraformAT077 < Formula
 
   bottle do
     cellar :any_skip_relocation
+    sha256 "a8339b96d926b1f289396711bee3bb9281fccdd2b0f19bd63625a17002e53e96" => :mojave
+    sha256 "ef4d436a8fc18ae56eb83789d3febe066f18251b74442c08a818d61ed986d811" => :high_sierra
     sha256 "dc8f15ea8b13741ae3e24c1776860b4e34f0c7a483cb2b158c8076b13a742424" => :sierra
     sha256 "6abe186fd9010b52ce24a7b27fbfd71448752f968e93825eca111f9d4b1688f5" => :el_capitan
     sha256 "c12d2cb75fb0e2df174f32cc6472b37d060a86ee19e649b90e8e0e33a30a7ab6" => :yosemite
   end
 
   depends_on "go" => :build
+  depends_on "gox" => :build
 
-  terraform_deps = %w[
-    github.com/mitchellh/gox c9740af9c6574448fd48eb30a71f964014c7a837
-    github.com/mitchellh/iochan 87b45ffd0e9581375c491fef3d32130bb15c5bd7
-    github.com/kisielk/errcheck 9c1292e1c962175f76516859f4a88aabd86dc495
-    github.com/kisielk/gotool 5e136deb9b893bbe6c8f23236ff4378b7a8a0dbb
-  ]
-
-  terraform_deps.each_slice(2) do |x, y|
-    go_resource x do
-      url "https://#{x}.git", :revision => y
-    end
-  end
-
-  go_resource "golang.org/x/tools" do
-    url "https://go.googlesource.com/tools.git",
-        :revision => "26c35b4dcf6dfcb924e26828ed9f4d028c5ce05a"
-  end
+  conflicts_with "tfenv", :because => "tfenv symlinks terraform binaries"
 
   def install
     ENV["GOPATH"] = buildpath
-    # For the gox buildtool used by terraform, which doesn't need to get installed permanently
-    ENV.append_path "PATH", buildpath
+    ENV.prepend_create_path "PATH", buildpath/"bin"
 
-    terrapath = buildpath/"src/github.com/hashicorp/terraform"
-    terrapath.install Dir["*"]
-    Language::Go.stage_deps resources, buildpath/"src"
+    dir = buildpath/"src/github.com/hashicorp/terraform"
+    dir.install buildpath.children - [buildpath/".brew_home"]
 
-    cd "src/github.com/mitchellh/gox" do
-      system "go", "build"
-      buildpath.install "gox"
-    end
-
-    cd "src/golang.org/x/tools/cmd/stringer" do
-      ENV.deparallelize { system "go", "build" }
-      buildpath.install "stringer"
-    end
-
-    cd "src/github.com/kisielk/errcheck" do
-      system "go", "build"
-      buildpath.install "errcheck"
-    end
-
-    cd terrapath do
+    cd dir do
       # v0.6.12 - source contains tests which fail if these environment variables are set locally.
       ENV.delete "AWS_ACCESS_KEY"
       ENV.delete "AWS_SECRET_KEY"
 
-      # Runs format check and test suite via makefile
-      ENV.deparallelize { system "make", "test", "vet" }
-
-      # Generate release binary
-      arch = MacOS.prefer_64_bit? ? "amd64" : "386"
       ENV["XC_OS"] = "darwin"
-      ENV["XC_ARCH"] = arch
-      system "make", "bin"
+      ENV["XC_ARCH"] = "amd64"
+      system "make", "tools", "test", "bin"
 
-      # Install release binary
-      bin.install "pkg/darwin_#{arch}/terraform"
-      zsh_completion.install "contrib/zsh-completion/_terraform"
+      bin.install "pkg/darwin_amd64/terraform"
+      prefix.install_metafiles
     end
   end
 
   test do
     minimal = testpath/"minimal.tf"
-    minimal.write <<-EOS.undent
+    minimal.write <<~EOS
       variable "aws_region" {
-          default = "us-west-2"
+        default = "us-west-2"
       }
       variable "aws_amis" {
-          default = {
-              eu-west-1 = "ami-b1cf19c6"
-              us-east-1 = "ami-de7ab6b6"
-              us-west-1 = "ami-3f75767a"
-              us-west-2 = "ami-21f78e11"
-          }
+        default = {
+          eu-west-1 = "ami-b1cf19c6"
+          us-east-1 = "ami-de7ab6b6"
+          us-west-1 = "ami-3f75767a"
+          us-west-2 = "ami-21f78e11"
+        }
       }
       # Specify the provider and access details
       provider "aws" {
-          access_key = "this_is_a_fake_access"
-          secret_key = "this_is_a_fake_secret"
-          region = "${var.aws_region}"
+        access_key = "this_is_a_fake_access"
+        secret_key = "this_is_a_fake_secret"
+        region     = var.aws_region
       }
       resource "aws_instance" "web" {
         instance_type = "m1.small"
-        ami = "${lookup(var.aws_amis, var.aws_region)}"
-        count = 4
+        ami           = var.aws_amis[var.aws_region]
+        count         = 4
       }
     EOS
-    system "#{bin}/terraform", "graph", testpath
+    system "#{bin}/terraform", "init"
+    system "#{bin}/terraform", "graph"
   end
 end
