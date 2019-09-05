@@ -7,13 +7,6 @@ class AnsibleAT254 < Formula
   sha256 "33a76684c47d1857d6e917af4f2eafac87521161f8181037edaa159a60deaeb3"
   head "https://github.com/ansible/ansible.git", :branch => "devel"
 
-  bottle do
-    cellar :any
-    sha256 "4f9010f7381fbb06da39d7eff3d0481793925523d17e65404074dc04752d5b3b" => :high_sierra
-    sha256 "e5be1e5901e051b03ef172ef6db8b9a035b0e1ff83da6ff76d205d7bcb52fd3a" => :sierra
-    sha256 "ad77ccbb5ccb5927d0275ce5bb682e8c783d01cd9ecfc4c0ad8a1fe17db53527" => :el_capitan
-  end
-
   depends_on "pkg-config" => :build
   depends_on "libyaml"
   depends_on "openssl"
