@@ -7,6 +7,11 @@ class TerraformAT077 < Formula
   def install
     bin.install "terraform"
     prefix.install_metafiles
-    system "/usr/local/bin/pip", "install", "boto" 
+  end
+  
+  def caveats; <<~EOS
+    Don't forget to install boto with following :
+      pip install boto
+  EOS
   end
 end
