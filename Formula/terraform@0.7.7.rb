@@ -7,6 +7,8 @@ class TerraformAT077 < Formula
   def install
     bin.install "terraform"
     prefix.install_metafiles
+    venv = virtualenv_create(terraform)
+    venv.pip_install "boto"
   end
 
 end
