@@ -1,4 +1,6 @@
 class TerraformAT077 < Formula
+  include Language::Python::Virtualenv
+  
   desc "Tool to build, change, and version infrastructure"
   homepage "https://www.terraform.io/"
   url "https://releases.hashicorp.com/terraform/0.7.7/terraform_0.7.7_darwin_amd64.zip"
