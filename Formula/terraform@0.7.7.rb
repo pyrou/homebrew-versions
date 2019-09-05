@@ -1,6 +1,4 @@
-class TerraformAT077 < Formula
-  include Language::Python::Virtualenv
-  
+class TerraformAT077 < Formula 
   desc "Tool to build, change, and version infrastructure"
   homepage "https://www.terraform.io/"
   url "https://releases.hashicorp.com/terraform/0.7.7/terraform_0.7.7_darwin_amd64.zip"
@@ -9,9 +7,6 @@ class TerraformAT077 < Formula
   def install
     bin.install "terraform"
     prefix.install_metafiles
-    venv = virtualenv_create(libexec)
-    venv.pip_install "boto"
-    venv.pip_install_and_link buildpath
+    system "pip", "install", "boto" 
   end
-
 end
